@@ -1,28 +1,30 @@
-import { config } from 'dotenv';
+import { config } from "dotenv";
 
-config({ path: '.env.local' });
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { z } from 'zod';
-import { semanticSearchNotes } from '../lib/semantic-search';
-import { answerFromNotes } from '../lib/rag-answer';
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { knowledgeBase } from '../lib/knowledge-base';
+config({ path: ".env.local" });
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+import { semanticSearchNotes } from "../lib/semantic-search";
+import { answerFromNotes } from "../lib/rag-answer";
+import { knowledgeBase } from "../lib/knowledge-base";
 
 const server = new McpServer({
-  name: 'genai-assistant-lab-mcp',
-  version: '0.1.0',
+  name: "genai-lab-mcp",
+  version: "0.1.0",
 });
 
 server.registerTool(
-  'search_notes',
+  "search_notes",
   {
-    title: 'Search Notes',
+    title: "Search Notes",
     description:
-    'Search saved notes and return matching note entries. Use only when the user asks to find, search, list, retrieve, or show notes.',
+      "Search saved notes and return matching note entries. Use only when the user asks to find, search, list, retrieve, or show notes.",
     inputSchema: {
-      query: z.string().describe('The search query.'),
-      limit: z.number().optional().describe('Maximum number of notes to return.'),
+      query: z.string().describe("The search query."),
+      limit: z
+        .number()
+        .optional()
+        .describe("Maximum number of notes to return."),
     },
   },
   async ({ query, limit }) => {
@@ -34,7 +36,7 @@ server.registerTool(
     return {
       content: [
         {
-          type: 'text',
+          type: "text",
           text: JSON.stringify(
             {
               query,
@@ -47,22 +49,22 @@ server.registerTool(
               })),
             },
             null,
-            2
+            2,
           ),
         },
       ],
     };
-  }
+  },
 );
 
 server.registerTool(
-  'answer_from_notes',
+  "answer_from_notes",
   {
-    title: 'Answer From Notes',
+    title: "Answer From Notes",
     description:
-    'Answer conceptual or explanatory questions using the saved notes knowledge base. Use for what, why, how, explain, or summarize questions.',
+      "Answer conceptual or explanatory questions using the saved notes knowledge base. Use for what, why, how, explain, or summarize questions.",
     inputSchema: {
-      question: z.string().describe('The question to answer from saved notes.'),
+      question: z.string().describe("The question to answer from saved notes."),
     },
   },
   async ({ question }) => {
@@ -71,52 +73,52 @@ server.registerTool(
     return {
       content: [
         {
-          type: 'text',
+          type: "text",
           text: JSON.stringify(result, null, 2),
         },
       ],
     };
-  }
+  },
 );
 
 server.registerResource(
-  'notes',
-  'notes://all',
+  "notes",
+  "notes://all",
   {
-    title: 'Saved Notes',
-    description: 'All saved notes in the local knowledge base.',
-    mimeType: 'application/json',
+    title: "Saved Notes",
+    description: "All saved notes in the local knowledge base.",
+    mimeType: "application/json",
   },
   async (uri) => {
     return {
       contents: [
         {
           uri: uri.href,
-          mimeType: 'application/json',
+          mimeType: "application/json",
           text: JSON.stringify(knowledgeBase, null, 2),
         },
       ],
     };
-  }
+  },
 );
 
 server.registerPrompt(
-  'rag_answer_prompt',
+  "rag_answer_prompt",
   {
-    title: 'RAG Answer Prompt',
+    title: "RAG Answer Prompt",
     description:
-      'Prompt template for answering questions using only provided sources.',
+      "Prompt template for answering questions using only provided sources.",
     argsSchema: {
-      question: z.string().describe('The user question.'),
-      sources: z.string().describe('Retrieved source content.'),
+      question: z.string().describe("The user question."),
+      sources: z.string().describe("Retrieved source content."),
     },
   },
   ({ question, sources }) => ({
     messages: [
       {
-        role: 'user',
+        role: "user",
         content: {
-          type: 'text',
+          type: "text",
           text: `
 Answer the question using only the provided sources.
 
@@ -134,7 +136,7 @@ ${sources}
         },
       },
     ],
-  })
+  }),
 );
 
 async function main() {

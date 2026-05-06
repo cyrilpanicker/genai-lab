@@ -1,61 +1,62 @@
-import { END, START, StateGraph } from '@langchain/langgraph';
-import { openai } from '@ai-sdk/openai';
-import { generateText, Output } from 'ai';
-import { z } from 'zod';
-import {
-  MiniAgentState,
-  type MiniAgentStateType,
-} from './agent-state';
-import { retrieveContext } from '../retrieve-context';
+import { END, START, StateGraph } from "@langchain/langgraph";
+import { openai } from "@ai-sdk/openai";
+import { generateText, Output } from "ai";
+import { z } from "zod";
+import { MiniAgentState, type MiniAgentStateType } from "./agent-state";
+import { retrieveContext } from "../retrieve-context";
 
 const AgentPlanSchema = z.object({
   steps: z.array(
     z.enum([
-      'retrieve_notes',
-      'answer_question',
-      'draft_message',
-      'final_response',
-    ])
+      "retrieve_notes",
+      "answer_question",
+      "draft_message",
+      "final_response",
+    ]),
   ),
   retrievalQuery: z.string().nullable(),
   reason: z.string(),
 });
 
 function routeAfterPlanner(state: MiniAgentStateType) {
-  if (state.plan.includes('retrieve_notes')) {
-    return 'retrieveNotes';
+  if (state.plan.includes("retrieve_notes")) {
+    return "retrieveNotes";
   }
 
-  if (state.plan.includes('draft_message')) {
-    return 'draftMessage';
+  if (state.plan.includes("draft_message")) {
+    return "draftMessage";
   }
 
-  return 'finalize';
+  return "finalize";
 }
 
 function routeAfterRetrieve(state: MiniAgentStateType) {
-  if (!state.retrievedAnswer && state.errors.length === 0 && state.retryCount > 0) {
-    return 'retrieveNotes';
+  if (
+    !state.retrievedAnswer &&
+    state.errors.length === 0 &&
+    state.retryCount > 0
+  ) {
+    return "retrieveNotes";
   }
 
   if (!state.retrievedAnswer || state.errors.length > 0) {
-    return 'finalize';
+    return "finalize";
   }
 
-  if (state.plan.includes('draft_message')) {
-    return 'draftMessage';
+  if (state.plan.includes("draft_message")) {
+    return "draftMessage";
   }
 
-  if (state.plan.includes('answer_question')) {
-    return 'answerQuestion';
+  if (state.plan.includes("answer_question")) {
+    return "answerQuestion";
   }
 
-  return 'finalize';
+  return "finalize";
 }
 
 async function plannerNode(state: MiniAgentStateType) {
   const { output } = await generateText({
-    model: openai('gpt-4.1-mini'),
+    model: openai("gpt-4.1-mini"),
 
     output: Output.object({
       schema: AgentPlanSchema,
@@ -144,7 +145,7 @@ async function plannerNode(state: MiniAgentStateType) {
     prompt: state.userMessage,
   });
 
-  const steps = [...new Set([...output.steps, 'final_response'])];
+  const steps = [...new Set([...output.steps, "final_response"])];
 
   return {
     plan: steps,
@@ -153,9 +154,10 @@ async function plannerNode(state: MiniAgentStateType) {
 }
 
 async function retrieveNotesNode(state: MiniAgentStateType) {
-  const query = state.retryCount > 0
-    ? state.userMessage
-    : state.retrievalQuery ?? state.userMessage;
+  const query =
+    state.retryCount > 0
+      ? state.userMessage
+      : (state.retrievalQuery ?? state.userMessage);
   const sources = await retrieveContext({
     query,
     limit: 3,
@@ -172,14 +174,14 @@ async function retrieveNotesNode(state: MiniAgentStateType) {
     return {
       retrievedAnswer: null,
       retrievedSources: [],
-      errors: ['No relevant notes found.'],
+      errors: ["No relevant notes found."],
     };
   }
 
   return {
     retrievedAnswer: sources
       .map((source) => `${source.title}: ${source.content} [${source.id}]`)
-      .join('\n\n'),
+      .join("\n\n"),
     retrievedSources: sources,
   };
 }
@@ -190,7 +192,7 @@ async function draftMessageNode(state: MiniAgentStateType) {
     : `No retrieved notes were used. Draft directly from the user request.`;
 
   const { text } = await generateText({
-    model: openai('gpt-4.1-mini'),
+    model: openai("gpt-4.1-mini"),
 
     system: `
     You draft concise Slack-style messages.
@@ -222,13 +224,15 @@ Draft the message.
 async function answerQuestionNode(state: MiniAgentStateType) {
   if (!state.retrievedAnswer) {
     return {
-      finalResponse: 'I could not find relevant notes to answer that.',
-      errors: ['Cannot answer question because no relevant notes were retrieved.'],
+      finalResponse: "I could not find relevant notes to answer that.",
+      errors: [
+        "Cannot answer question because no relevant notes were retrieved.",
+      ],
     };
   }
 
   const { text } = await generateText({
-    model: openai('gpt-4.1-mini'),
+    model: openai("gpt-4.1-mini"),
 
     system: `
 You answer questions using only the provided retrieved notes.
@@ -266,7 +270,7 @@ async function finalResponseNode(state: MiniAgentStateType) {
 
   if (state.errors.length > 0) {
     return {
-      finalResponse: state.errors.join('\n'),
+      finalResponse: state.errors.join("\n"),
     };
   }
 
@@ -284,31 +288,31 @@ async function finalResponseNode(state: MiniAgentStateType) {
 
   return {
     finalResponse:
-      'This mini agent currently handles note-based retrieval and drafting requests.',
+      "This mini agent currently handles note-based retrieval and drafting requests.",
   };
 }
 
 export const miniAgentGraph = new StateGraph(MiniAgentState)
-  .addNode('planner', plannerNode)
-  .addNode('retrieveNotes', retrieveNotesNode)
-  .addNode('answerQuestion', answerQuestionNode)
-  .addNode('draftMessage', draftMessageNode)
-  .addNode('finalize', finalResponseNode)
-  .addEdge(START, 'planner')
-  .addConditionalEdges('planner', routeAfterPlanner, {
-    retrieveNotes: 'retrieveNotes',
-    draftMessage: 'draftMessage',
-    finalize: 'finalize',
+  .addNode("planner", plannerNode)
+  .addNode("retrieveNotes", retrieveNotesNode)
+  .addNode("answerQuestion", answerQuestionNode)
+  .addNode("draftMessage", draftMessageNode)
+  .addNode("finalize", finalResponseNode)
+  .addEdge(START, "planner")
+  .addConditionalEdges("planner", routeAfterPlanner, {
+    retrieveNotes: "retrieveNotes",
+    draftMessage: "draftMessage",
+    finalize: "finalize",
   })
-  .addConditionalEdges('retrieveNotes', routeAfterRetrieve, {
-    retrieveNotes: 'retrieveNotes',
-    draftMessage: 'draftMessage',
-    answerQuestion: 'answerQuestion',
-    finalize: 'finalize',
+  .addConditionalEdges("retrieveNotes", routeAfterRetrieve, {
+    retrieveNotes: "retrieveNotes",
+    draftMessage: "draftMessage",
+    answerQuestion: "answerQuestion",
+    finalize: "finalize",
   })
-  .addEdge('answerQuestion', 'finalize')
-  .addEdge('draftMessage', 'finalize')
-  .addEdge('finalize', END)
+  .addEdge("answerQuestion", "finalize")
+  .addEdge("draftMessage", "finalize")
+  .addEdge("finalize", END)
   .compile();
 
 export async function runMiniAgent(userMessage: string) {

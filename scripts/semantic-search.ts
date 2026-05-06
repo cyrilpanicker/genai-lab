@@ -1,8 +1,8 @@
-import { config } from 'dotenv';
+import { config } from "dotenv";
 
-config({ path: '.env.local' });
+config({ path: ".env.local" });
 
-const query = process.argv.slice(2).join(' ');
+const query = process.argv.slice(2).join(" ");
 
 if (!query) {
   console.error('Usage: pnpm semantic-search "your search query"');
@@ -10,7 +10,7 @@ if (!query) {
 }
 
 async function main() {
-  const { semanticSearchNotes } = await import('../lib/semantic-search');
+  const { semanticSearchNotes } = await import("../lib/semantic-search");
 
   const results = await semanticSearchNotes({
     query,
@@ -23,8 +23,8 @@ async function main() {
     console.log(`Score: ${result.score.toFixed(4)}`);
     console.log(`Title: ${result.note.title}`);
     console.log(`Content: ${result.note.content}`);
-    console.log(`Tags: ${result.note.tags.join(', ')}`);
-    console.log('---');
+    console.log(`Tags: ${result.note.tags.join(", ")}`);
+    console.log("---");
   }
 }
 

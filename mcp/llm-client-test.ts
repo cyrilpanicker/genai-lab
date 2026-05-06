@@ -1,13 +1,13 @@
-import { config } from 'dotenv';
+import { config } from "dotenv";
 
-config({ path: '.env.local' });
+config({ path: ".env.local" });
 
-import { createMCPClient } from '@ai-sdk/mcp';
-import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio';
-import { openai } from '@ai-sdk/openai';
-import { generateText, stepCountIs } from 'ai';
+import { createMCPClient } from "@ai-sdk/mcp";
+import { Experimental_StdioMCPTransport } from "@ai-sdk/mcp/mcp-stdio";
+import { openai } from "@ai-sdk/openai";
+import { generateText, stepCountIs } from "ai";
 
-const userMessage = process.argv.slice(2).join(' ');
+const userMessage = process.argv.slice(2).join(" ");
 
 if (!userMessage) {
   console.error('Usage: pnpm mcp:llm "your message here"');
@@ -16,8 +16,8 @@ if (!userMessage) {
 
 async function main() {
   const transport = new Experimental_StdioMCPTransport({
-    command: 'pnpm',
-    args: ['tsx', 'mcp/server.ts'],
+    command: "pnpm",
+    args: ["tsx", "mcp/server.ts"],
   });
 
   const mcpClient = await createMCPClient({
@@ -28,7 +28,7 @@ async function main() {
     const tools = await mcpClient.tools();
 
     const result = await generateText({
-      model: openai('gpt-4.1-mini'),
+      model: openai("gpt-4.1-mini"),
 
       system: `
       You are a practical assistant with access to MCP tools.
@@ -51,13 +51,13 @@ async function main() {
     const allToolCalls = result.steps.flatMap((step) => step.toolCalls);
     const allToolResults = result.steps.flatMap((step) => step.toolResults);
 
-    console.log('\nFinal response:');
+    console.log("\nFinal response:");
     console.log(result.text);
 
-    console.log('\nMCP tool calls:');
+    console.log("\nMCP tool calls:");
     console.log(JSON.stringify(allToolCalls, null, 2));
 
-    console.log('\nMCP tool results:');
+    console.log("\nMCP tool results:");
     console.log(JSON.stringify(allToolResults, null, 2));
   } finally {
     await mcpClient.close();

@@ -1,8 +1,8 @@
-import { config } from 'dotenv';
+import { config } from "dotenv";
 
-config({ path: '.env.local' });
+config({ path: ".env.local" });
 
-const userMessage = process.argv.slice(2).join(' ');
+const userMessage = process.argv.slice(2).join(" ");
 
 if (!userMessage) {
   console.error('Usage: pnpm agent "your request here"');
@@ -10,14 +10,14 @@ if (!userMessage) {
 }
 
 async function main() {
-  const { runMiniAgent } = await import('../lib/agent/mini-agent');
+  const { runMiniAgent } = await import("../lib/agent/mini-agent");
 
   const result = await runMiniAgent(userMessage);
 
-  console.log('\nAgent final state:');
+  console.log("\nAgent final state:");
   console.log(JSON.stringify(result, null, 2));
 
-  console.log('\nFinal response:');
+  console.log("\nFinal response:");
   console.log(result.finalResponse);
 }
 

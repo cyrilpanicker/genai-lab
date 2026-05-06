@@ -1,5 +1,5 @@
-import type { RetrievedContext } from './rag-types';
-import { semanticSearchNotes } from './semantic-search';
+import type { RetrievedContext } from "./rag-types";
+import { semanticSearchNotes } from "./semantic-search";
 
 export async function retrieveContext(params: {
   query: string;

@@ -1,6 +1,6 @@
-import { embedText, embedTexts } from './embedding';
-import { knowledgeBase, type KnowledgeNote } from './knowledge-base';
-import { cosineSimilarity } from './vector-utils';
+import { embedText, embedTexts } from "./embedding";
+import { knowledgeBase, type KnowledgeNote } from "./knowledge-base";
+import { cosineSimilarity } from "./vector-utils";
 
 export type SemanticSearchResult = {
   note: KnowledgeNote;
@@ -8,11 +8,7 @@ export type SemanticSearchResult = {
 };
 
 function noteToSearchText(note: KnowledgeNote) {
-  return [
-    note.title,
-    note.content,
-    `Tags: ${note.tags.join(', ')}`,
-  ].join('\n');
+  return [note.title, note.content, `Tags: ${note.tags.join(", ")}`].join("\n");
 }
 
 export async function semanticSearchNotes(params: {

@@ -1,21 +1,21 @@
-import { openai } from '@ai-sdk/openai';
-import { generateText } from 'ai';
+import { openai } from "@ai-sdk/openai";
+import { generateText } from "ai";
 
-import type { RagAnswer, RetrievedContext } from './rag-types';
-import { retrieveContext } from './retrieve-context';
+import type { RagAnswer, RetrievedContext } from "./rag-types";
+import { retrieveContext } from "./retrieve-context";
 
 function formatContext(sources: RetrievedContext[]) {
   return sources
-    .map(
-      (source) => `
+    .map((source) =>
+      `
 Source ID: ${source.id}
 Title: ${source.title}
 Content: ${source.content}
-Tags: ${source.tags.join(', ')}
+Tags: ${source.tags.join(", ")}
 Similarity score: ${source.score.toFixed(4)}
-`.trim()
+`.trim(),
     )
-    .join('\n\n---\n\n');
+    .join("\n\n---\n\n");
 }
 
 export async function answerFromNotes(question: string): Promise<RagAnswer> {
@@ -27,13 +27,13 @@ export async function answerFromNotes(question: string): Promise<RagAnswer> {
 
   if (sources.length === 0) {
     return {
-      answer: 'I could not find relevant notes to answer that.',
+      answer: "I could not find relevant notes to answer that.",
       sources: [],
     };
   }
 
   const { text } = await generateText({
-    model: openai('gpt-4.1-mini'),
+    model: openai("gpt-4.1-mini"),
 
     system: `
 You answer questions using only the provided notes.

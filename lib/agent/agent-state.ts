@@ -1,5 +1,5 @@
-import { Annotation } from '@langchain/langgraph';
-import type { RetrievedContext } from '../rag-types';
+import { Annotation } from "@langchain/langgraph";
+import type { RetrievedContext } from "../rag-types";
 
 export const MiniAgentState = Annotation.Root({
   userMessage: Annotation<string>(),

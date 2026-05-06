@@ -1,7 +1,7 @@
-import { openai } from '@ai-sdk/openai';
-import { embed, embedMany } from 'ai';
+import { openai } from "@ai-sdk/openai";
+import { embed, embedMany } from "ai";
 
-const embeddingModel = openai.embedding('text-embedding-3-small');
+const embeddingModel = openai.embedding("text-embedding-3-small");
 
 export async function embedText(text: string) {
   const { embedding } = await embed({
